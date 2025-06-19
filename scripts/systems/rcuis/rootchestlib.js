@@ -2,6 +2,7 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
 import { CHEST_DATA_KEY, isOp } from "../consts.js";
+import { showGroupEditorUI } from "./groupManager.js"
 
 export function registerRootChestLibraryUI() {
   world.beforeEvents.itemUse.subscribe(event => {
@@ -18,7 +19,7 @@ export function registerRootChestLibraryUI() {
       if (source.isSneaking) {
         showPurgeUI(source);
       } else {
-        openLibraryUI(source);
+        showRootChestSelectorUI(source);
       }
     });
   });
@@ -54,6 +55,29 @@ export function registerRootChestLibraryUI() {
       }
 
       showChestDetail(player, selectedID, selectedData, dataMap);
+    });
+  }
+
+  function showRootChestSelectorUI(player) {
+    const form = new ActionFormData()
+      .title("📦 libを選択")
+      .button("📁 グループ管理UIを開く")
+      .button("📦 ChestライブラリUIを開く");
+
+    form.show(player).then(res => {
+      if (res.canceled) return;
+
+      if (res.selection === 0) {
+      system.run(() => {
+        try {
+          player.runCommand("scriptevent system:gr0upli6")
+        } catch (e) {
+          console.warn("グループlibが開けなかった!ぴえん", e);
+        }
+      });
+      } else if (res.selection === 1) {
+        openLibraryUI(player);
+      }
     });
   }
 
