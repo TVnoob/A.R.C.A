@@ -1,0 +1,36 @@
+{
+    "format_version": 2,
+    "header": {
+        "description": "pls read README",
+        "name": "Advanced Rootchest Create Addon-BE",
+        "uuid": "06985ecd-9d68-44c4-a1e7-f1e36fb52a3c",
+        "version": [ 1, 0, 0 ],
+        "min_engine_version": [ 1, 18, 10 ]
+    },
+    "modules": [
+        {
+            "description": "(試験的)",
+            "type": "script",
+            "language": "javascript",
+            "uuid": "d148112a-0972-41df-b44b-d918784ffc4e",
+            "entry": "scripts/main.js",
+            "version": [1, 0, 0]
+        }
+    ],
+    "dependencies": [
+        {
+            "uuid": "68ca9c5d-52eb-4f97-b1ec-d83f1fcc0f79",
+            "version": [1, 0, 0]
+        },
+        {
+            "module_name": "@minecraft/server",
+            "version": "2.1.0-beta"
+        },
+        {
+            "module_name": "@minecraft/server-ui",
+            "version": "2.1.0-beta"
+        }
+      ],
+      
+    "capabilities": ["script_eval","client_forms"]   
+}
