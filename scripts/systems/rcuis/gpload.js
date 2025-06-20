@@ -10,20 +10,20 @@ export function showCycleSettingGPUI(player) {
     system.afterEvents.scriptEventReceive.subscribe((event) => {
     const { id, message, sourceEntity } = event;
     if (id === "system:gr0upl0ad"){
-  const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
-  const chestRaw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
-  const dataMap = JSON.parse(chestRaw);
-  const validIDs = Object.entries(dataMap)
+    const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
+    const chestRaw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
+    const dataMap = JSON.parse(chestRaw);
+    const validIDs = Object.entries(dataMap)
     .filter(([_, d]) => validateChestData(d))
     .map(([id]) => id);
 
-  const groupRaw = world.getDynamicProperty(CHEST_GROUPS_KEY) ?? "{}";
-  const groupMap = JSON.parse(groupRaw);
-  const groupEntries = Object.entries(groupMap)
-    .filter(([, arr]) => arr.length > 0);
-  const groupLabels = groupEntries.map(([g, arr]) => `${g} (${arr.length})`);
+    const groupRaw = world.getDynamicProperty(CHEST_GROUPS_KEY) ?? "{}";
+    const groupMap = JSON.parse(groupRaw);
+    const groupEntries = Object.entries(groupMap)
+      .filter(([, arr]) => arr.length > 0);
+    const groupLabels = groupEntries.map(([g, arr]) => `${g} (${arr.length})`);
 
-  const form = new ModalFormData()
+    const form = new ModalFormData()
     .title("RootChest グループ周期＆確率設定")
     .dropdown("対象グループを選択", groupLabels)
     .textField("周期（分）", "10")
