@@ -1,6 +1,8 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
 import { CHEST_DATA_KEY, CHEST_GROUPS_KEY, RELOAD_INTERVALS_KEY } from "../consts.js";
+import { resetAllTimerMap } from "./autoreloadrc.js"
+import { CHEST_PROB_MAP_KEY } from "../consts.js";
 
 export function showCycleSettingGPUI(player) {
     if(subscribed) return;
@@ -8,6 +10,7 @@ export function showCycleSettingGPUI(player) {
     system.afterEvents.scriptEventReceive.subscribe((event) => {
     const { id, message, sourceEntity } = event;
     if (id === "system:gr0upl0ad"){
+  const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
   const chestRaw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
   const dataMap = JSON.parse(chestRaw);
   const validIDs = Object.entries(dataMap)
