@@ -3,6 +3,7 @@
 # commands
 ### /scriptevent lc:rset
 - 全チェストを強制的に一からスタート
-#### /scriptevent system:groupmanual <グループ1|グループ2>
+#### /scriptevent system:groupmanual <グループ1|グループ2|グループ3>
 - グループ1: 手動生成するグループ名
 - グループ2: 再生成除外するグループ名
+- グループ3: 削除するグループ

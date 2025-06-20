@@ -19,7 +19,7 @@ export function showCycleSettingGPUI(player) {
 
     const chestIDs = Object.keys(dataMap);
     if (chestIDs.length === 0) {
-      player.sendMessage("§e📦 登録されたRootChestがありません。");
+      player.sendMessage("§e📦 登録されたグループがありません。");
       return;
     }
 
