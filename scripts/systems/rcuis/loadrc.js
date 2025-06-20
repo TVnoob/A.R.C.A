@@ -2,9 +2,7 @@
 import { world, system, ItemStack } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
 import { resetAllTimerMap } from "./autoreloadrc.js";
-import { CHEST_DATA_KEY, isOp } from "../consts.js";
-
-const RELOAD_INTERVALS_KEY = "rootchest_reload_intervals";
+import { CHEST_DATA_KEY, isOp, RELOAD_INTERVALS_KEY } from "../consts.js";
 
 export function registerRootChestLoader() {
   world.beforeEvents.itemUse.subscribe(event => {
@@ -19,12 +17,35 @@ export function registerRootChestLoader() {
 
     system.run(() => {
       if (source.isSneaking) {
-        showCycleSettingUI(source);
+        showRootChestSelectorUI(source);
       } else {
         showLoadUI(source);
       }
     });
   });
+
+    function showRootChestSelectorUI(player) {
+      const form = new ActionFormData()
+        .title("📦 libを選択")
+        .button("📁 グループ用再生成UIを開く")
+        .button("📦 個別ChestID再生成UIを開く");
+  
+      form.show(player).then(res => {
+        if (res.canceled) return;
+  
+        if (res.selection === 0) {
+        system.run(() => {
+          try {
+            player.runCommand("scriptevent system:gr0upl0ad")
+          } catch (e) {
+            console.warn("グループ用再生成UIが開けなかった!ぴえん", e);
+          }
+        });
+        } else if (res.selection === 1) {
+          showCycleSettingUI(player);
+        }
+      });
+    }
 
   function showCycleSettingUI(player) {
     const raw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";

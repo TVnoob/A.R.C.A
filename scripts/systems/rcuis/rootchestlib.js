@@ -2,7 +2,7 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
 import { CHEST_DATA_KEY, isOp } from "../consts.js";
-import { showGroupEditorUI } from "./groupManager.js"
+import { CHEST_GROUPS_KEY } from "./groupManager.js"
 
 export function registerRootChestLibraryUI() {
   world.beforeEvents.itemUse.subscribe(event => {
@@ -27,33 +27,41 @@ export function registerRootChestLibraryUI() {
   function openLibraryUI(player) {
     const raw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
     const dataMap = JSON.parse(raw);
-    const form = new ActionFormData().title("RootChest Library");
 
+    const groupRaw = world.getDynamicProperty(CHEST_GROUPS_KEY) ?? "{}";
+    const groupMap = JSON.parse(groupRaw);
+
+    const chestToGroups = {}; 
+    for (const [groupName, ids] of Object.entries(groupMap)) {
+      for (const cid of ids) {
+        chestToGroups[cid] = chestToGroups[cid] || [];
+        chestToGroups[cid].push(groupName);
+      }
+    }
+
+    const form = new ActionFormData().title("RootChest Library");
     const chestIDs = Object.keys(dataMap);
+
     if (chestIDs.length === 0) {
       player.sendMessage("§e📦 登録されたRootChestがありません。");
       return;
     }
 
     for (const chestID of chestIDs) {
-      const data = dataMap[chestID];
-      const valid = validateChestData(data);
-      const label = valid ? chestID : `§cbroken(${chestID})`;
+      const groups = chestToGroups[chestID] || [];
+      const suffix = groups.length > 0 ? ` [${groups.join(",")}]` : "";
+      const label = chestID + suffix;
       form.button(label);
     }
 
     form.show(player).then(res => {
       if (res.canceled) return;
-
       const selectedID = chestIDs[res.selection];
       const selectedData = dataMap[selectedID];
-      const isValid = validateChestData(selectedData);
-
-      if (!isValid) {
+      if (!validateChestData(selectedData)) {
         player.sendMessage(`§c⚠️ "${selectedID}" はデータが破損しています。`);
         return;
       }
-
       showChestDetail(player, selectedID, selectedData, dataMap);
     });
   }

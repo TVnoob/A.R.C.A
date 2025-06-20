@@ -2,10 +2,13 @@ import { world, system } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
 import { CHEST_DATA_KEY } from "../consts.js";
 
-const CHEST_GROUPS_KEY = "rootchest_group_map";
+export const CHEST_GROUPS_KEY = "rootchest_group_map";
 
+let subscribed = false;
 // グループ編集UI
 export function showGroupEditorUI(player) {
+    if(subscribed) return;
+    subscribed = true;
     system.afterEvents.scriptEventReceive.subscribe((event) => {
     const { id, message, sourceEntity } = event;
     if (id === "system:gr0upli6"){
@@ -24,7 +27,7 @@ export function showGroupEditorUI(player) {
 
     const form = new ModalFormData()
         .title("📦 グループ作成 / 編集")
-        .toggle("🛠 既存グループを編集する", false)
+        .toggle("🛠 既存グループを編集する")
         .textField("グループ名を入力", "例: group1")
         .dropdown("追加 / 削除する chestID", chestIDs, { defaultValueIndex: 0 });
 

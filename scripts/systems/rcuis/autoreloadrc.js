@@ -1,32 +1,27 @@
 // scripts/autoreloadrc.js
 import { world, system, ItemStack } from "@minecraft/server";
-import { CHEST_DATA_KEY } from "../consts.js";
-const RELOAD_INTERVALS_KEY = "rootchest_reload_intervals";
+import { CHEST_DATA_KEY, RELOAD_INTERVALS_KEY } from "../consts.js";
 
 // 1秒 = 20tick（runInterval を毎秒に設定）
 let timerMap = {};
 
 export function startRootChestAutoReload() {
   system.runInterval(() => {
-    const rawData = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
-    const rawIntervals = world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}";
-
-    const chestMap = JSON.parse(rawData);
-    const intervalMap = JSON.parse(rawIntervals);
+    const chestMap = JSON.parse(world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}");
+    const intervalMap = JSON.parse(world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}");
 
     for (const [chestID, intervalMin] of Object.entries(intervalMap)) {
       const data = chestMap[chestID];
       if (!validateChestData(data)) continue;
+      timerMap[chestID] = (timerMap[chestID] ?? 0) + 1;
 
-      timerMap[chestID] = (timerMap[chestID] ?? 0) + 1; // 毎秒加算
-
-      if (timerMap[chestID] >= intervalMin * 60) { // 分単位 → 秒換算
+      if (timerMap[chestID] >= intervalMin * 60) {
         timerMap[chestID] = 0;
         placeRootChest(data);
         console.warn(`⏱️ RootChest "${chestID}" 再生成完了`);
       }
     }
-  }, 20); // 毎秒（20tick）
+  }, 20);
 }
 
 function placeRootChest(data, player) {
@@ -72,6 +67,32 @@ function placeRootChest(data, player) {
   }
 }
 
+export function registerAutoReloadEvents() {
+  // 全チェスト再リセット
+  system.afterEvents.scriptEventReceive.subscribe(event => {
+    if (event.id === "lc:rset") {
+      for (const k in timerMap) timerMap[k] = 0;
+      console.warn("[AutoReload] 全チェストのリセットを実行しました");
+    }
+    // グループ単位リセット
+    else if (event.id === "lc:regr") {
+      let groupName = event.message?.trim();
+      const groupMap = JSON.parse(world.getDynamicProperty(CHEST_GROUPS_KEY) ?? "{}");
+      const targetList = Array.isArray(groupMap[groupName]) ? groupMap[groupName] : null;
+
+      if (!targetList) {
+        console.warn(`[AutoReload] 未登録グループ名: "${groupName}"`);
+        return;
+      }
+
+      for (const chestID of targetList) {
+        if (timerMap[chestID] != null) timerMap[chestID] = 0;
+      }
+      console.warn(`[AutoReload] グループ "${groupName}" に含む ${targetList.length}件をリセット`);
+    }
+  });
+}
+
 
 function validateChestData(data) {
   if (!data || !Array.isArray(data.position) || data.position.length !== 3) return false;
@@ -82,12 +103,5 @@ function validateChestData(data) {
 }
 
 export function resetAllTimerMap() {
-  system.afterEvents.scriptEventReceive.subscribe((event) => {
-  const { id, message } = event;
-    if (id === "lc:rset") {
-      for (const id in timerMap) {
-        timerMap[id] = 0;
-      }
-    }
-  });
+  system.run(() => world.sendMessage("lc:rset")); // 自動でリセットイベント送信
 }
