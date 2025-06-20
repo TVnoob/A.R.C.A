@@ -1,6 +1,6 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
-import { CHEST_DATA_KEY, CHEST_GROUPS_KEY } from "../consts.js";
+import { CHEST_DATA_KEY, GROUP_MEMBERS_KEY } from "../consts.js";
 
 let subscribed = false;
 // グループ編集UI
@@ -11,7 +11,7 @@ export function showGroupEditorUI(player) {
     const { id, message, sourceEntity } = event;
     if (id === "system:gr0upli6"){
     const chestRaw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
-    const groupRaw = world.getDynamicProperty(CHEST_GROUPS_KEY) ?? "{}";
+    const groupRaw = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
 
     const chestMap = JSON.parse(chestRaw);
     const groupMap = JSON.parse(groupRaw);
@@ -59,7 +59,7 @@ export function showGroupEditorUI(player) {
         }
 
         groupMap[groupName] = Array.from(updatedSet);
-        world.setDynamicProperty(CHEST_GROUPS_KEY, JSON.stringify(groupMap));
+        world.setDynamicProperty(GROUP_MEMBERS_KEY, JSON.stringify(groupMap));
         player.sendMessage(`§a✅ グループ "${groupName}" を更新しました。`);
     }).catch(err => {
         console.warn(`[GroupUI] UIエラー: ${err}`);

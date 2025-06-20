@@ -2,7 +2,7 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
 import { CHEST_DATA_KEY, isOp } from "../consts.js";
-import { CHEST_GROUPS_KEY } from "./groupManager.js"
+import { GROUP_MEMBERS_KEY } from "../consts.js";
 
 export function registerRootChestLibraryUI() {
   world.beforeEvents.itemUse.subscribe(event => {
@@ -28,7 +28,7 @@ export function registerRootChestLibraryUI() {
     const raw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
     const dataMap = JSON.parse(raw);
 
-    const groupRaw = world.getDynamicProperty(CHEST_GROUPS_KEY) ?? "{}";
+    const groupRaw = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
     const groupMap = JSON.parse(groupRaw);
 
     const chestToGroups = {}; 

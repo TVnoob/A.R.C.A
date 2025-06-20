@@ -1,6 +1,6 @@
 // scripts/rcuis/loadrc.js
 import { world, system, ItemStack } from "@minecraft/server";
-import { ModalFormData } from "@minecraft/server-ui";
+import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
 import { resetAllTimerMap } from "./autoreloadrc.js";
 import { CHEST_DATA_KEY, isOp, RELOAD_INTERVALS_KEY } from "../consts.js";
 

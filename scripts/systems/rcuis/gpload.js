@@ -1,9 +1,9 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
-import { CHEST_DATA_KEY, CHEST_GROUPS_KEY, RELOAD_INTERVALS_KEY } from "../consts.js";
+import { CHEST_DATA_KEY, GROUP_MEMBERS_KEY, RELOAD_INTERVALS_KEY, CHEST_PROB_MAP_KEY } from "../consts.js";
 import { resetAllTimerMap } from "./autoreloadrc.js"
-import { CHEST_PROB_MAP_KEY } from "../consts.js";
 
+let subscribed = false;
 export function showCycleSettingGPUI(player) {
     if(subscribed) return;
     subscribed = true;
@@ -17,7 +17,15 @@ export function showCycleSettingGPUI(player) {
     .filter(([_, d]) => validateChestData(d))
     .map(([id]) => id);
 
-    const groupRaw = world.getDynamicProperty(CHEST_GROUPS_KEY) ?? "{}";
+    function validateChestData(data) {
+    if (!data || !Array.isArray(data.position) || data.position.length !== 3) return false;
+    if (!data.defaultTries || !data.slotCount) return false;
+    if (!Array.isArray(data.items)) return false;
+    const validItems = data.items.filter(i => i.id && typeof i.chance === "number" && i.chance > 0);
+    return validItems.length > 0;
+    }
+
+    const groupRaw = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
     const groupMap = JSON.parse(groupRaw);
     const groupEntries = Object.entries(groupMap)
       .filter(([, arr]) => arr.length > 0);
@@ -32,6 +40,7 @@ export function showCycleSettingGPUI(player) {
     .textField("生成個数", "1")
     .textField("出現確率(1～100)", "50");
 
+  const player = sourceEntity
   form.show(player).then(res => {
     if (res.canceled) return;
     const [gIndex, minText, applyAll, probToggle, cntText, chanceText] = res.formValues;

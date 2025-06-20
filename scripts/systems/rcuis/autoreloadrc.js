@@ -108,4 +108,5 @@ function validateChestData(data) {
 
 export function resetAllTimerMap() {
   system.run(() => world.sendMessage("lc:rset"));
+  console.warn("scriptevent lc:rset was success!")
 }
