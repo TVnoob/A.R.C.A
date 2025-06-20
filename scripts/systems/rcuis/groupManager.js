@@ -16,6 +16,7 @@ export function showGroupEditorUI(player) {
     const groupMap = JSON.parse(groupRaw);
 
     const chestIDs = Object.keys(chestMap);
+    const player = sourceEntity
     if (chestIDs.length === 0) {
         player.sendMessage("§e📦 登録されたChestがありません。");
         return;
