@@ -59,7 +59,7 @@ export function startRootChestAutoReload() {
 }
 
 
-function placeRootChest(data) {
+export function placeRootChest(data) {
   const { position, defaultTries, slotCount, items } = data;
   const blockLoc = { x: Math.floor(position[0]), y: Math.floor(position[1]), z: Math.floor(position[2]) };
   const block = world.getDimension("overworld").getBlock(blockLoc);
@@ -85,18 +85,16 @@ function placeRootChest(data) {
   }
 }
 
-
-export function registerAutoReloadEvents() {
-  // 全チェスト再リセット
+export function registerAutoReloadEvents() {  // 全チェスト再リセット
   system.afterEvents.scriptEventReceive.subscribe(event => {
-    if (event.id === "lc:rset") {
+    const { id, message, sourceEntity } = event; // ﾔｹｸｿの2回目const
+    if (id === "lc:rset") {
       for (const k in timerMap) timerMap[k] = 0;
       for (const key in groupTimerMap) groupTimerMap[key] = 0;
-      console.warn("[AutoReload] 全チェストのリセットを実行しました");
+      sourceEntity.sendMessage("[AutoReload] 全チェストのリセットを実行しました");
     }
   });
 }
-
 
 function validateChestData(data) {
   if (!data || !Array.isArray(data.position) || data.position.length !== 3) return false;
@@ -106,7 +104,8 @@ function validateChestData(data) {
   return validItems.length > 0;
 }
 
-export function resetAllTimerMap() {
-  system.run(() => world.sendMessage("lc:rset"));
-  console.warn("scriptevent lc:rset was success!")
+export function resetAllTimerMap() { // 内部スクリプト用
+  for (const k in timerMap) timerMap[k] = 0;
+  for (const key in groupTimerMap) groupTimerMap[key] = 0;
+  console.warn("[AutoReload] 全チェストのリセットを実行しました");
 }

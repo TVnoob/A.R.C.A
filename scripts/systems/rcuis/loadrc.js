@@ -19,14 +19,37 @@ export function registerRootChestLoader() {
       if (source.isSneaking) {
         showRootChestSelectorUI(source);
       } else {
-        showLoadUI(source);
+        showloadselectUI(source);
       }
     });
   });
 
+      function showloadselectUI(player) {
+      const form = new ActionFormData()
+        .title("📦 UIを選択")
+        .button("📁 グループ用生成UIを開く")
+        .button("📦 個別ChestID生成UIを開く");
+  
+      form.show(player).then(res => {
+        if (res.canceled) return;
+  
+        if (res.selection === 0) {
+        system.run(() => {
+          try {
+            player.runCommand("scriptevent system:8r0upmanua10pen")
+          } catch (e) {
+            console.warn("グループ用再生成UIが開けなかった!ぴえん", e);
+          }
+        });
+        } else if (res.selection === 1) {
+          showLoadUI(player);
+        }
+      });
+    }
+
     function showRootChestSelectorUI(player) {
       const form = new ActionFormData()
-        .title("📦 libを選択")
+        .title("📦 UIを選択")
         .button("📁 グループ用再生成UIを開く")
         .button("📦 個別ChestID再生成UIを開く");
   

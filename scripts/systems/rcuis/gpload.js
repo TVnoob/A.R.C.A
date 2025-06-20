@@ -17,6 +17,12 @@ export function showCycleSettingGPUI(player) {
     .filter(([_, d]) => validateChestData(d))
     .map(([id]) => id);
 
+    const chestIDs = Object.keys(dataMap);
+    if (chestIDs.length === 0) {
+      player.sendMessage("§e📦 登録されたRootChestがありません。");
+      return;
+    }
+
     function validateChestData(data) {
     if (!data || !Array.isArray(data.position) || data.position.length !== 3) return false;
     if (!data.defaultTries || !data.slotCount) return false;
@@ -58,6 +64,7 @@ export function showCycleSettingGPUI(player) {
       reloadMap[id] = minutes;
     }
     world.setDynamicProperty(RELOAD_INTERVALS_KEY, JSON.stringify(reloadMap));
+    const reset_right = res.formValues[4];
     resetAllTimerMap();
     player.sendMessage(`✅ 周期を設定しました(分): ${minutes}`);
 

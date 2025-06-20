@@ -11,3 +11,8 @@ export const CHEST_PROB_MAP_KEY = "rootchest_prob_map";
 export function isOp(player) {
   return player?.playerPermissionLevel === PlayerPermissionLevel.Operator;
 }
+
+
+// export const CHEST_GROUPS_KEY = "rootchest_group_map";
+// export const GROUP_SETTINGS_KEY = "rootchest_group_settings";
+// export const RELOAD_INTERVALS_KEY = "rootchest_reload_intervals";
