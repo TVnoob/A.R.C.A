@@ -4,9 +4,11 @@ import { registerRootChestLibraryUI } from "./systems/rcuis/rootchestlib.js";
 import { registerRootChestLoader } from "./systems/rcuis/loadrc.js";
 import { startRootChestAutoReload } from "./systems/rcuis/autoreloadrc.js";
 import { showGroupEditorUI } from "./systems/rcuis/groupManager.js"
+import { showCycleSettingGPUI } from "./systems/rcuis/gpload.js"
 
 startRootChestAutoReload();
 registerRootChestLoader();
 registerRootChestLibraryUI();
 registerRootChestKitUI();
 showGroupEditorUI();
+showCycleSettingGPUI();

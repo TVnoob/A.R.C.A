@@ -1,7 +1,6 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
-import { CHEST_DATA_KEY, CHEST_GROUPS_KEY } from "../consts.js";
-const RELOAD_INTERVALS_KEY = "rootchest_reload_intervals";
+import { CHEST_DATA_KEY, CHEST_GROUPS_KEY, RELOAD_INTERVALS_KEY } from "../consts.js";
 
 export function showCycleSettingGPUI(player) {
     if(subscribed) return;
