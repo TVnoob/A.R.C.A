@@ -1,6 +1,6 @@
 // scripts/autoreloadrc.js
 import { world, system, ItemStack } from "@minecraft/server";
-import { CHEST_DATA_KEY, RELOAD_INTERVALS_KEY, GROUP_MEMBERS_KEY, GROUP_SETTINGS_KEY } from "../consts.js";
+import { CHEST_DATA_KEY, RELOAD_INTERVALS_KEY, GROUP_MEMBERS_KEY, CHEST_PROB_MAP_KEY } from "../consts.js";
 
 // 1秒 = 20tick（runInterval を毎秒に設定）
 let timerMap = {};
@@ -8,19 +8,17 @@ let groupTimerMap = {};
 
 export function startRootChestAutoReload() {
   system.runInterval(() => {
-    const rawData = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
-    const rawIntervals = world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}";
-    const rawGroups = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
-    const rawGroupSettings = world.getDynamicProperty(GROUP_SETTINGS_KEY) ?? "{}";
-
-    const chestMap = JSON.parse(rawData);
-    const intervalMap = JSON.parse(rawIntervals);
-    const groupMap = JSON.parse(rawGroups);
-    const groupSettings = JSON.parse(rawGroupSettings);
+    const chestRaw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
+    const dataMap = JSON.parse(chestRaw);
+    const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
+    const probMap = JSON.parse(probRaw);
+    const groupRaw = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
+    const groupMap = JSON.parse(groupRaw);
+    const intervalMap = JSON.parse(world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}");
 
     // 📦 単一チェスト再生成
     for (const [chestID, intervalMin] of Object.entries(intervalMap)) {
-      const data = chestMap[chestID];
+      const data = dataMap[chestID];
       if (!validateChestData(data)) continue;
 
       timerMap[chestID] = (timerMap[chestID] || 0) + 1;
@@ -32,25 +30,34 @@ export function startRootChestAutoReload() {
     }
 
     // 🧩 グループチェスト再生成
-    for (const [grp, members] of Object.entries(groupMap)) {
-      const settings = groupSettings[grp];
-      if (!settings) continue;
+    for (const [groupName, chestIDs] of Object.entries(groupMap)) {
+      if (!Array.isArray(chestIDs) || chestIDs.length === 0) continue;
 
-      const { interval, chance = 100, count = 1 } = settings;
-      groupTimerMap[grp] = (groupTimerMap[grp] || 0) + 1;
+      // タイマー初期化と進行
+      groupTimerMap[groupName] = (groupTimerMap[groupName] ?? 0) + 1;
 
-      if (groupTimerMap[grp] >= interval * 60) {
-        groupTimerMap[grp] = 0;
+      // いずれかのチェストから周期を取得（group内の代表ID）
+      const refID = chestIDs.find(cid => probMap[cid]);
+      if (!refID) continue;
 
-        if (Math.random() * 100 < chance) {
-          const validIDs = members.filter(id => validateChestData(chestMap[id]));
-          const shuffle = validIDs.sort(() => .5 - Math.random());
-          const pick = shuffle.slice(0, Math.min(count, shuffle.length));
+      const config = probMap[refID];
+      if (!config || typeof config.count !== "number" || typeof config.chance !== "number") continue;
 
-          for (const id of pick) {
-            placeRootChest(chestMap[id]);
-            console.warn(`⏱️ [Group:${grp}] "${id}" を再生成しました`);
-          }
+      const intervalSec = 60 * (world.getDynamicProperty("rootchest_reload_intervals")?.[refID] ?? 10);
+      if (groupTimerMap[groupName] < intervalSec) continue;
+
+      groupTimerMap[groupName] = 0;
+
+      // --- 実行: 確率に基づいて最大count個だけ再生成 ---
+      let spawnCount = 0;
+      for (const cid of chestIDs) {
+        if (spawnCount >= config.count) break;
+        const data = dataMap[cid];
+        if (!validateChestData(data)) continue;
+
+        if (Math.random() * 100 < config.chance) {
+          placeRootChest(data);
+          spawnCount++;
         }
       }
     }

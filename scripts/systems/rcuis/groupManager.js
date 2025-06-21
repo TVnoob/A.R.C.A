@@ -17,17 +17,17 @@ export function showGroupEditorUI(player) {
     const groupMap = JSON.parse(groupRaw);
 
     const chestIDs = Object.keys(chestMap);
+    const GroupIDs = Object.keys(groupMap);
     const player = sourceEntity
-    if (chestIDs.length === 0) {
-        player.sendMessage("§e📦 登録されたChestがありません。");
-        return;
-    }
 
+    const groupMapant = GroupIDs.map(([g, arr]) => `${g} (${arr.length})`);
     const form = new ModalFormData()
         .title("📦 グループ作成 / 編集")
         .toggle("🛠 既存グループを編集する")
         .textField("グループ名を入力", "例: group1")
-        .dropdown("追加 / 削除する chestID", chestIDs, { defaultValueIndex: 0 });
+        .dropdown("追加 / 削除する chestID", chestIDs, { defaultValueIndex: 0 })
+        .submitButton("§s[加えた変更を適応する]");
+
 
     form.show(player).then(res => {
         if (res.canceled) return;

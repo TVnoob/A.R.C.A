@@ -101,6 +101,8 @@ export function registerRootChestLibraryUI() {
 
     form.toggle("❌ 削除する");
 
+    form.submitButton("§p[Delete or Close]");
+
     form.show(player).then(res => {
       if (res.canceled) return;
 

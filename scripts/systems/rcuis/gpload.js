@@ -34,17 +34,18 @@ export function showCycleSettingGPUI(player) {
     const groupRaw = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
     const groupMap = JSON.parse(groupRaw);
     const groupEntries = Object.entries(groupMap)
-      .filter(([, arr]) => arr.length > 0);
+    .filter(([, arr]) => arr.length > 0);
     const groupLabels = groupEntries.map(([g, arr]) => `${g} (${arr.length})`);
 
     const form = new ModalFormData()
     .title("RootChest グループ周期＆確率設定")
     .dropdown("対象グループを選択", groupLabels)
     .textField("周期（分）", "10")
-    .toggle("一括適用")
+    .toggle("ほかのチェストを含めて一度カウントをリスタート")
     .toggle("チェストの出現確率＆個数を設定")
-    .textField("生成個数", "1")
-    .textField("出現確率(1～100)", "50");
+    .textField("生成個数上限", "<maxlimit>")
+    .textField("各チェストの出現確率(1～100)", "神はサイコロを…")
+    .submitButton("§6[設定する]");
 
   const player = sourceEntity
   form.show(player).then(res => {
@@ -64,25 +65,26 @@ export function showCycleSettingGPUI(player) {
       reloadMap[id] = minutes;
     }
     world.setDynamicProperty(RELOAD_INTERVALS_KEY, JSON.stringify(reloadMap));
-    const reset_right = res.formValues[4];
+    const reset_right = res.formValues[2];
+    if (reset_right === true) {
     resetAllTimerMap();
+    }
     player.sendMessage(`✅ 周期を設定しました(分): ${minutes}`);
 
     // 確率＆個数設定
-    if (probToggle) {
+    const ramdontoggle = res.formValues[3];
+    if (ramdontoggle) {
       const cnt = parseInt(cntText);
       const chance = parseFloat(chanceText);
       if (isNaN(cnt) || cnt < 1 || isNaN(chance) || chance < 1 || chance > 100) {
         return player.sendMessage("§c❌ 個数または確率が無効です");
       }
-      // 保存用キー例: "rootchest_prob_map"
-      const probRaw = world.getDynamicProperty("rootchest_prob_map") ?? "{}";
-      const probMap = JSON.parse(probRaw);
-      for (const id of chestList) {
-        probMap[id] = { count: cnt, chance };
-      }
-      world.setDynamicProperty("rootchest_prob_map", JSON.stringify(probMap));
-      player.sendMessage(`✅ 確率・個数を設定しました: 個数${cnt}, 確率${chance}%`);
+    const probMap = JSON.parse(world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}");
+    for (const id of chestList) {
+      probMap[id] = { count: cnt, chance };
+    }
+    world.setDynamicProperty(CHEST_PROB_MAP_KEY, JSON.stringify(probMap));
+    player.sendMessage(`✅ 確率・個数を設定しました: 個数${cnt}, 確率${chance}%`);
     }
   });
 }

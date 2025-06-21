@@ -36,6 +36,7 @@ export function registerRootChestKitUI() {
         .toggle(`デフォルトの試行回数を使用（${i + 1}）`,{defaultValue: true})
         .textField(`個別にこのアイテムの試行回数を割り当て（${i + 1}）`, "");
     }
+    form.submitButton("§9[Create Chest!]");
 
     form.show(player).then(res => {
       if (res.canceled) return;

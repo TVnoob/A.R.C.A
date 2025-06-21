@@ -1,6 +1,6 @@
 import { world, system } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
-import { CHEST_DATA_KEY, GROUP_MEMBERS_KEY } from "../consts.js";
+import { CHEST_DATA_KEY, GROUP_MEMBERS_KEY, CHEST_PROB_MAP_KEY } from "../consts.js";
 import { placeRootChest } from "./autoreloadrc.js"; // 再利用できるよう export が必要
 
 const MANUAL_EVENT_ID = "system:groupmanual";
@@ -40,10 +40,10 @@ export function registerGroupManualUI() {
     }
 
     if (valid(stopGroup)) {
-      const probRaw = world.getDynamicProperty("rootchest_prob_map") ?? "{}";
+      const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
       const probMap = JSON.parse(probRaw);
       groupMap[stopGroup].forEach(cid => delete probMap[cid]);
-      world.setDynamicProperty("rootchest_prob_map", JSON.stringify(probMap));
+      world.setDynamicProperty(CHEST_PROB_MAP_KEY, JSON.stringify(probMap));
       player?.sendMessage(`§6⏹ グループ "${stopGroup}" を再生成対象から除外しました`);
     }
 
@@ -68,9 +68,10 @@ function showManualGroupControlUI(player) {
   const form = new ModalFormData()
     .title("手動制御グループUI")
     .dropdown("グループ一覧", groupNames)
-    .textField("📦 生成するグループ名", "")
-    .textField("🛑 除外するグループ名", "")
-    .textField("🗑️ グループ名を削除", "");
+    .textField("生成するグループ名", "<ここにグループ名を入力>")
+    .textField("自動読み込みの対象から外すグループ名", "<ここにグループ名を入力>")
+    .textField("グループ名を削除", "<ここにグループ名を入力>")
+    .submitButton("§s[加えた変更を適応する]");
 
   form.show(player).then(res => {
     if (res.canceled) return;
@@ -80,12 +81,12 @@ function showManualGroupControlUI(player) {
     const chestMap = JSON.parse(rawChest);
     const groupRaw = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
     const groupMap = JSON.parse(groupRaw);
-    const probRaw = world.getDynamicProperty("rootchest_prob_map") ?? "{}";
+    const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
     const probMap = JSON.parse(probRaw);
 
-    const genGroup = toGen.trim();
-    const delGroup = toRemove.trim();
-    const delEntireGroup = toDelete.trim();
+    const genGroup = (res.formValues[1] ?? "").trim();
+    const delGroup = (res.formValues[2] ?? "").trim();
+    const delEntireGroup = (res.formValues[3] ?? "").trim();
 
     if (genGroup && groupMap[genGroup]) {
       groupMap[genGroup].forEach(cid => {
@@ -94,15 +95,17 @@ function showManualGroupControlUI(player) {
       player.sendMessage(`§a✅ グループ "${genGroup}" を手動生成しました`);
     }
 
-    if (delGroup && groupMap[delGroup]) {
-      groupMap[delGroup].forEach(cid => delete probMap[cid]);
-      world.setDynamicProperty("rootchest_prob_map", JSON.stringify(probMap));
+    if (probMap[delGroup]) {
+      probMap[delGroup].forEach(cid => delete probMap[cid]);
+      world.setDynamicProperty(CHEST_PROB_MAP_KEY, JSON.stringify(probMap));
       player.sendMessage(`§6⏹ グループ "${delGroup}" を再生成対象から除外しました`);
+    } else {
+      player.sendMessage(`§7⏹ グループ "${delGroup}" は再生成リストに存在していません`);
     }
 
     if (delEntireGroup && groupMap[delEntireGroup]) {
       delete groupMap[delEntireGroup];
-      world.setDynamicProperty(CHEST_GROUPS_KEY, JSON.stringify(groupMap));
+      world.setDynamicProperty(GROUP_MEMBERS_KEY, JSON.stringify(groupMap));
       player.sendMessage(`§c🗑️ グループ "${delEntireGroup}" を削除しました`);
     }
   });

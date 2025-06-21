@@ -1,7 +1,6 @@
 // scripts/rcuis/loadrc.js
 import { world, system, ItemStack } from "@minecraft/server";
 import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
-import { resetAllTimerMap } from "./autoreloadrc.js";
 import { CHEST_DATA_KEY, isOp, RELOAD_INTERVALS_KEY } from "../consts.js";
 
 export function registerRootChestLoader() {
@@ -85,15 +84,13 @@ export function registerRootChestLoader() {
     const form = new ModalFormData()
       .title("RootChest 再生成周期設定")
       .dropdown("対象chestIDを選択", validIDs)
-      .textField("再生成周期（分）", "10")
-      .toggle("🌐 全ての生成周期を合わせる"); // 🆕
+      .textField("再生成周期（分）", "10");
 
     form.show(player).then(res => {
       if (res.canceled) return;
 
       const index = res.formValues[0];
       const minutes = parseInt(res.formValues[1]);
-      const applyToAll = res.formValues[2]; // 🆕
 
       if (isNaN(minutes) || minutes <= 0) {
         player.sendMessage("§c⛔ 無効な周期が入力されました。");
@@ -104,21 +101,10 @@ export function registerRootChestLoader() {
       const rawMap = world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}";
       const reloadMap = JSON.parse(rawMap);
 
-      if (applyToAll) {
-        for (const id of validIDs) {
-          reloadMap[id] = minutes;
-        }
-        world.setDynamicProperty(RELOAD_INTERVALS_KEY, JSON.stringify(reloadMap));
-
-        resetAllTimerMap();
-
-        // reset timerMap in autoreloadrc.js if needed (not accessible here)
-        player.sendMessage(`§a✅ 全${validIDs.length}件の周期を ${minutes}分 に統一しました。`);
-      } else {
-        reloadMap[id] = minutes;
-        world.setDynamicProperty(RELOAD_INTERVALS_KEY, JSON.stringify(reloadMap));
-        player.sendMessage(`§a✅ "${id}" の再生成周期を ${minutes}分 に設定しました。`);
-      }
+      reloadMap[id] = minutes;
+      world.setDynamicProperty(RELOAD_INTERVALS_KEY, JSON.stringify(reloadMap));
+      player.sendMessage(`§a✅ "${id}" の再生成周期を ${minutes}分 に設定しました。`);
+      
     });
   }
 
@@ -138,19 +124,17 @@ export function registerRootChestLoader() {
 
     const form = new ModalFormData()
       .title("RootChest ローダー")
-      .textField("📥 対象chestIDを入力してください", "")
-      .dropdown("📋 有効なchestID一覧", validIDs)
-      .textField("🗑️ 自動読み込みの対象から外すchestIDを入力", "");
+      .dropdown("📋 対象chestIDを選択", validIDs)
+      .textField("🗑️ 自動読み込みの対象から外すchestIDを入力", "RC_<int>")
+      .submitButton("§l§s[実行する]");
 
     form.show(player).then(res => {
       if (res.canceled) return;
 
-      const inputID = (res.formValues[0] ?? "").trim();
-      const selectedIndex = typeof res.formValues[1] === "number" ? res.formValues[1] : 0;
-      const validID = validIDs[selectedIndex];
-      const chosenID = inputID || validID;
-
-      const excludeID = (res.formValues[2] ?? "").trim();
+      const selectedindex = res.formValues[0];
+      const chosenID = validIDs[selectedindex];
+      
+      const excludeID = (res.formValues[1] ?? "").trim();
 
       if (excludeID) {
         const rawMap = world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}";
