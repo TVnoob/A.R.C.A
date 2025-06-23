@@ -40,7 +40,11 @@ export function startRootChestAutoReload() {
 
     // 🧩 グループ単位の再生成
     for (const [groupName, cfg] of Object.entries(probMap)) {
-      const { members, count, chance } = cfg;
+      const { members, count, chance, mode } = cfg;
+        if (mode === true) {
+          groupTimerMap[groupName] = 0;
+          continue;
+        }
       if (!Array.isArray(members) || members.length === 0) continue;
       if (typeof count !== "number" || typeof chance !== "number") continue;
 
