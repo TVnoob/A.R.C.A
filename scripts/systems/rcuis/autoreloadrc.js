@@ -10,20 +10,27 @@ export function startRootChestAutoReload() {
   system.runInterval(() => {
     const chestRaw = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
     const dataMap = JSON.parse(chestRaw);
+
     const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
     const probMap = JSON.parse(probRaw);
-    const groupRaw = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
-    const groupMap = JSON.parse(groupRaw);
+
     const intervalMap = JSON.parse(world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}");
 
-    const groupedIDs = new Set(Object.values(groupMap).flat())
-    // 📦 単一チェスト再生成
+    // すべてのグループに所属するchestIDを集めてSet化（単体と区別）
+    const groupedIDs = new Set();
+    for (const cfg of Object.values(probMap)) {
+      if (Array.isArray(cfg.members)) {
+        for (const cid of cfg.members) groupedIDs.add(cid);
+      }
+    }
+
+    // 📦 単体chest再生成（グループに属していないもの）
     for (const [chestID, intervalMin] of Object.entries(intervalMap)) {
-      if (groupedIDs.has(chestID)) continue; // グループ所属チェストはスキップ
+      if (groupedIDs.has(chestID)) continue; // グループ所属ならスキップ
       const data = dataMap[chestID];
       if (!validateChestData(data)) continue;
 
-      timerMap[chestID] = (timerMap[chestID] || 0) + 1;
+      timerMap[chestID] = (timerMap[chestID] ?? 0) + 1;
       if (timerMap[chestID] >= intervalMin * 60) {
         timerMap[chestID] = 0;
         placeRootChest(data);
@@ -31,40 +38,36 @@ export function startRootChestAutoReload() {
       }
     }
 
-    // 🧩 グループチェスト再生成
-    for (const [groupName, chestIDs] of Object.entries(groupMap)) {
-      if (!Array.isArray(chestIDs) || chestIDs.length === 0) continue;
+    // 🧩 グループ単位の再生成
+    for (const [groupName, cfg] of Object.entries(probMap)) {
+      const { members, count, chance } = cfg;
+      if (!Array.isArray(members) || members.length === 0) continue;
+      if (typeof count !== "number" || typeof chance !== "number") continue;
 
-      // タイマー初期化と進行
       groupTimerMap[groupName] = (groupTimerMap[groupName] ?? 0) + 1;
 
-      // いずれかのチェストから周期を取得（group内の代表ID）
-      const refID = chestIDs.find(cid => probMap[cid]);
-      if (!refID) continue;
-
-      const config = probMap[refID];
-      if (!config || typeof config.count !== "number" || typeof config.chance !== "number") continue;
-
-      const intervalMap = JSON.parse(world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}");
+      // 代表chestIDから周期取得
+      const refID = members.find(cid => intervalMap[cid] !== undefined);
       const intervalSec = 60 * (intervalMap[refID] ?? 10);
       if (groupTimerMap[groupName] < intervalSec) continue;
 
       groupTimerMap[groupName] = 0;
 
-      // --- 実行: 確率に基づいて最大count個だけ再生成 ---
+      // 確率に基づいて生成
       let spawnCount = 0;
-      for (const cid of chestIDs) {
-        if (spawnCount >= config.count) break;
+      for (const cid of members) {
+        if (spawnCount >= count) break;
         const data = dataMap[cid];
         if (!validateChestData(data)) continue;
 
-        if (Math.random() * 100 < config.chance) {
+        if (Math.random() * 100 < chance) {
           placeRootChest(data);
           spawnCount++;
         }
       }
-    }
 
+      console.warn(`⏱️ [Group] グループ "${groupName}" の再生成完了 (${spawnCount}/${count})`);
+    }
   }, 20);
 }
 
