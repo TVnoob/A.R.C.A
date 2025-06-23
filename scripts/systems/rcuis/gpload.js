@@ -79,10 +79,12 @@ export function showCycleSettingGPUI(player) {
       if (isNaN(cnt) || cnt < 1 || isNaN(chance) || chance < 1 || chance > 100) {
         return player.sendMessage("§c❌ 個数または確率が無効です");
       }
-    const probMap = JSON.parse(world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}");
-    for (const id of chestList) {
-      probMap[id] = { count: cnt, chance };
-    }
+        const probMap = JSON.parse(world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}");
+        probMap[groupName] = {
+          members: chestList,
+          count: cnt,
+          chance: chance
+        };
     world.setDynamicProperty(CHEST_PROB_MAP_KEY, JSON.stringify(probMap));
     player.sendMessage(`✅ 確率・個数を設定しました: 個数${cnt}, 確率${chance}%`);
     }
