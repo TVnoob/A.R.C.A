@@ -3,7 +3,7 @@ import { ModalFormData } from "@minecraft/server-ui";
 import { CHEST_DATA_KEY, GROUP_MEMBERS_KEY, CHEST_PROB_MAP_KEY } from "../consts.js";
 import { placeRootChest } from "./autoreloadrc.js"; // 再利用できるよう export が必要
 
-const MANUAL_EVENT_ID = "system:groupmanual";
+const MANUAL_EVENT_ID = "system:gmanual";
 
 export function registerGroupManualUI() {
   // UI呼び出し: プレイヤーがアイテムなどで使用
@@ -13,45 +13,38 @@ export function registerGroupManualUI() {
     showManualGroupControlUI(sourceEntity);
     }
 
-    // scriptevent 対応
-    if (event.id !== MANUAL_EVENT_ID) return;
-
+  if (event.id === MANUAL_EVENT_ID) {
     const { sourceEntity: player, message = "" } = event;
     const [genGroup, stopGroup, delGroup] = message.split("|").map(s => s.trim());
-
+  
     const rawGroup = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
     const groupMap = JSON.parse(rawGroup);
     const rawChest = world.getDynamicProperty(CHEST_DATA_KEY) ?? "{}";
     const chestMap = JSON.parse(rawChest);
-
-    const chestIDs = Object.keys(dataMap);
-    if (chestIDs.length === 0) {
-      player.sendMessage("§e📦 登録されたグループがありません。");
-      return;
-    }
-
-    const valid = (id) => id && groupMap[id];
-
+    const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
+    const probMap = JSON.parse(probRaw);
+  
+    const valid = (id) => id && id.toLowerCase() !== "none" && groupMap[id];
+  
     if (valid(genGroup)) {
       groupMap[genGroup].forEach(cid => {
         if (chestMap[cid]) placeRootChest(chestMap[cid]);
       });
       player?.sendMessage(`§a✅ グループ "${genGroup}" を手動生成しました`);
     }
-
-    if (valid(stopGroup)) {
-      const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
-      const probMap = JSON.parse(probRaw);
-      groupMap[stopGroup].forEach(cid => delete probMap[cid]);
+  
+    if (valid(stopGroup) && probMap[stopGroup]) {
+      delete probMap[stopGroup];
       world.setDynamicProperty(CHEST_PROB_MAP_KEY, JSON.stringify(probMap));
       player?.sendMessage(`§6⏹ グループ "${stopGroup}" を再生成対象から除外しました`);
     }
-
-    if (delGroup && groupMap[delGroup]) {
+  
+    if (valid(delGroup)) {
       delete groupMap[delGroup];
-      world.setDynamicProperty(CHEST_GROUPS_KEY, JSON.stringify(groupMap));
+      world.setDynamicProperty(GROUP_MEMBERS_KEY, JSON.stringify(groupMap));
       player?.sendMessage(`§c🗑️ グループ "${delGroup}" を削除しました`);
     }
+  }
   });
 }
 
@@ -95,12 +88,12 @@ function showManualGroupControlUI(player) {
       player.sendMessage(`§a✅ グループ "${genGroup}" を手動生成しました`);
     }
 
-    if (probMap[delGroup]) {
-      probMap[delGroup].forEach(cid => delete probMap[cid]);
+    if (probMap[stopGroup]) {
+      delete probMap[stopGroup]; // グループ単位で削除
       world.setDynamicProperty(CHEST_PROB_MAP_KEY, JSON.stringify(probMap));
-      player.sendMessage(`§6⏹ グループ "${delGroup}" を再生成対象から除外しました`);
+      player?.sendMessage(`§6 グループ "${stopGroup}" を再生成対象から除外しました`);
     } else {
-      player.sendMessage(`§7⏹ グループ "${delGroup}" は再生成リストに存在していません`);
+      player?.sendMessage(`§7 グループ "${stopGroup}" は再生成リストに存在していません`);
     }
 
     if (delEntireGroup && groupMap[delEntireGroup]) {
