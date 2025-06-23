@@ -25,12 +25,24 @@ export function registerGroupManualUI() {
     const probMap = JSON.parse(probRaw);
   
     const valid = (id) => id && id.toLowerCase() !== "none" && groupMap[id];
-  
+    
     if (valid(genGroup)) {
-      groupMap[genGroup].forEach(cid => {
-        if (chestMap[cid]) placeRootChest(chestMap[cid]);
-      });
-      player?.sendMessage(`§a✅ グループ "${genGroup}" を手動生成しました`);
+      const groupInfo = probMap[genGroup];
+      const limit = groupInfo?.count ?? groupMap[genGroup].length;
+      const chance = groupInfo?.chance ?? 100;
+    
+      let spawned = 0;
+      for (const cid of groupMap[genGroup]) {
+        if (spawned >= limit) break;
+        if (Math.random() * 100 < chance) {
+          const data = chestMap[cid];
+          if (data) {
+            placeRootChest(data);
+            spawned++;
+          }
+        }
+      }
+      player?.sendMessage(`§a✅ グループ "${genGroup}" を ${spawned} 件生成しました`);
     }
   
     if (valid(stopGroup) && probMap[stopGroup]) {
@@ -82,10 +94,25 @@ function showManualGroupControlUI(player) {
     const delEntireGroup = (res.formValues[3] ?? "").trim();
 
     if (genGroup && groupMap[genGroup]) {
-      groupMap[genGroup].forEach(cid => {
-        if (chestMap[cid]) placeRootChest(chestMap[cid]);
-      });
-      player.sendMessage(`§a✅ グループ "${genGroup}" を手動生成しました`);
+      const probRaw = world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}";
+      const probMap = JSON.parse(probRaw);
+      const config = probMap[genGroup];
+    
+      let spawned = 0;
+      const maxCount = config?.count ?? groupMap[genGroup].length;
+      const chance = config?.chance ?? 100;
+    
+      for (const cid of groupMap[genGroup]) {
+        if (spawned >= maxCount) break;
+        if (!chestMap[cid]) continue;
+    
+        if (Math.random() * 100 < chance) {
+          placeRootChest(chestMap[cid]);
+          spawned++;
+        }
+      }
+    
+      player.sendMessage(`§a✅ グループ "${genGroup}" を手動生成しました（成功: ${spawned} 件）`);
     }
 
     if (probMap[stopGroup]) {
