@@ -16,8 +16,10 @@ export function startRootChestAutoReload() {
     const groupMap = JSON.parse(groupRaw);
     const intervalMap = JSON.parse(world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}");
 
+    const groupedIDs = new Set(Object.values(groupMap).flat())
     // 📦 単一チェスト再生成
     for (const [chestID, intervalMin] of Object.entries(intervalMap)) {
+      if (groupedIDs.has(chestID)) continue; // グループ所属チェストはスキップ
       const data = dataMap[chestID];
       if (!validateChestData(data)) continue;
 
@@ -43,7 +45,8 @@ export function startRootChestAutoReload() {
       const config = probMap[refID];
       if (!config || typeof config.count !== "number" || typeof config.chance !== "number") continue;
 
-      const intervalSec = 60 * (world.getDynamicProperty("rootchest_reload_intervals")?.[refID] ?? 10);
+      const intervalMap = JSON.parse(world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}");
+      const intervalSec = 60 * (intervalMap[refID] ?? 10);
       if (groupTimerMap[groupName] < intervalSec) continue;
 
       groupTimerMap[groupName] = 0;
@@ -90,6 +93,7 @@ export function placeRootChest(data) {
       } catch {}
     }
   }
+  console.warn(`✅ [Group ${groupName}] "${cid}" spawned`);
 }
 
 export function registerAutoReloadEvents() {  // 全チェスト再リセット
