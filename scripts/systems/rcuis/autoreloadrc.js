@@ -65,7 +65,7 @@ export function startRootChestAutoReload() {
         if (!validateChestData(data)) continue;
 
         if (Math.random() * 100 < chance) {
-          placeRootChest(data);
+          placeRootChest(dataMap[cid], { groupName, chestID: cid });
           spawnCount++;
         }
       }
@@ -76,9 +76,16 @@ export function startRootChestAutoReload() {
 }
 
 
-export function placeRootChest(data) {
+export function placeRootChest(data, options = {}) {
   const { position, defaultTries, slotCount, items } = data;
-  const blockLoc = { x: Math.floor(position[0]), y: Math.floor(position[1]), z: Math.floor(position[2]) };
+  const { groupName, chestID } = options;
+
+  const blockLoc = {
+    x: Math.floor(position[0]),
+    y: Math.floor(position[1]),
+    z: Math.floor(position[2])
+  };
+
   const block = world.getDimension("overworld").getBlock(blockLoc);
   if (!block) return;
 
@@ -100,8 +107,12 @@ export function placeRootChest(data) {
       } catch {}
     }
   }
-  console.warn(`✅ [Group ${groupName}] "${cid}" spawned`);
+
+  if (groupName && chestID) {
+    console.warn(`✅ [Group ${groupName}] "${chestID}" spawned`);
+  }
 }
+
 
 export function registerAutoReloadEvents() {  // 全チェスト再リセット
   system.afterEvents.scriptEventReceive.subscribe(event => {

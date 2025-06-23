@@ -51,7 +51,7 @@ export function showCycleSettingGPUI(player) {
       const player = sourceEntity
       form.show(player).then(res => {
         if (res.canceled) return;
-        const [gIndex, minText, applyAll, probToggle, cntText, chanceText] = res.formValues;
+        const [gIndex, minText, applyAll, probToggle, NONE000001, cntText, chanceText] = res.formValues; // NONE群はnone
         const groupName = groupEntries[gIndex][0];
         const chestList = groupMap[groupName];
         const minutes = parseInt(minText);
@@ -81,22 +81,21 @@ export function showCycleSettingGPUI(player) {
           const cnt = parseInt(cntText);
           const chance = parseFloat(chanceText);
           if (isNaN(cnt) || cnt < 1 || isNaN(chance) || chance < 1 || chance > 100) {
-            return player.sendMessage("§c❌ 個数または確率が無効です");
-          }
-        
-          probMap[groupName] = {
-            members: chestList,
-            count: cnt,
-            chance: chance,
-            mode: manualOnly
-          };
+          return player.sendMessage("§c❌ 個数または確率が無効です");
+        }
+        probMap[groupName] = {
+          members: chestList,
+          count: cnt,
+          chance: chance,
+          mode: manualOnly
+        };
           player.sendMessage(`✅ 確率・個数を設定しました: 個数${cnt}, 確率${chance}%`);
         } else {
           const manualOnly = res.formValues[4];
           // ✅ デフォルト設定を保存（確率100%、上限 = メンバー数）
           probMap[groupName] = {
             members: chestList,
-            count: chestList.length,
+            count: chestList,
             chance: 100,
             mode: manualOnly
           };

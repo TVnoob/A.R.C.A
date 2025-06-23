@@ -37,7 +37,7 @@ export function registerGroupManualUI() {
         if (Math.random() * 100 < chance) {
           const data = chestMap[cid];
           if (data) {
-            placeRootChest(data);
+            placeRootChest(dataMap[cid], { groupName, chestID: cid });
             spawned++;
           }
         }
@@ -90,7 +90,7 @@ function showManualGroupControlUI(player) {
     const probMap = JSON.parse(probRaw);
 
     const genGroup = (res.formValues[1] ?? "").trim();
-    const delGroup = (res.formValues[2] ?? "").trim();
+    const stopGroup = (res.formValues[2] ?? "").trim();
     const delEntireGroup = (res.formValues[3] ?? "").trim();
 
     if (genGroup && groupMap[genGroup]) {
@@ -107,7 +107,7 @@ function showManualGroupControlUI(player) {
         if (!chestMap[cid]) continue;
     
         if (Math.random() * 100 < chance) {
-          placeRootChest(chestMap[cid]);
+          placeRootChest(chestMap[cid], { groupNames, chestID: cid });
           spawned++;
         }
       }
