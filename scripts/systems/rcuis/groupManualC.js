@@ -15,7 +15,7 @@ export function registerGroupManualUI() {
 
   if (event.id === MANUAL_EVENT_ID) {
     const { sourceEntity: player, message = "" } = event;
-    const [genGroup, stopGroup, delGroup] = message.split("|").map(s => s.trim());
+    const [genGroup, stopGroup, delGroup] = message.split(".").map(s => s.trim());
   
     const rawGroup = world.getDynamicProperty(GROUP_MEMBERS_KEY) ?? "{}";
     const groupMap = JSON.parse(rawGroup);
