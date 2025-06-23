@@ -43,6 +43,7 @@ export function showCycleSettingGPUI(player) {
         .textField("周期（分）", "10")
         .toggle("ほかのチェストを含めて一度カウントをリスタート")
         .toggle("チェストの出現確率＆個数を設定")
+        .toggle("自動生成を無効化")
         .textField("生成個数上限", "<maxlimit>")
         .textField("各チェストの出現確率(1～100)", "神はサイコロを…")
         .submitButton("§6[設定する]");
@@ -76,6 +77,7 @@ export function showCycleSettingGPUI(player) {
         const probMap = JSON.parse(world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}");
         
         if (ramdontoggle) {
+          const manualOnly = res.formValues[4];
           const cnt = parseInt(cntText);
           const chance = parseFloat(chanceText);
           if (isNaN(cnt) || cnt < 1 || isNaN(chance) || chance < 1 || chance > 100) {
@@ -85,15 +87,18 @@ export function showCycleSettingGPUI(player) {
           probMap[groupName] = {
             members: chestList,
             count: cnt,
-            chance: chance
+            chance: chance,
+            mode: manualOnly
           };
           player.sendMessage(`✅ 確率・個数を設定しました: 個数${cnt}, 確率${chance}%`);
         } else {
+          const manualOnly = res.formValues[4];
           // ✅ デフォルト設定を保存（確率100%、上限 = メンバー数）
           probMap[groupName] = {
             members: chestList,
             count: chestList.length,
-            chance: 100
+            chance: 100,
+            mode: manualOnly
           };
           player.sendMessage(`✅ デフォルト設定で登録しました: 全${chestList.length}個, 100%`);
         }
