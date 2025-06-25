@@ -51,33 +51,26 @@ export function showCycleSettingGPUI(player) {
       const player = sourceEntity
       form.show(player).then(res => {
         if (res.canceled) return;
-        const [gIndex, minText, applyAll, probToggle, NONE000001, cntText, chanceText] = res.formValues; // NONE群はnone
+        const [gIndex, minText, applyAll, probToggle, checkmode, cntText, chanceText] = res.formValues;
         const groupName = groupEntries[gIndex][0];
         const chestList = groupMap[groupName];
         const minutes = parseInt(minText);
         if (isNaN(minutes) || minutes <= 0) {
           return player.sendMessage("§c❌ 無効な周期です");
         }
-    
-        // 周期マップ保存
-        const rawMap = world.getDynamicProperty(RELOAD_INTERVALS_KEY) ?? "{}";
-        const reloadMap = JSON.parse(rawMap);
-        for (const id of (applyAll ? Object.keys(dataMap) : chestList)) {
-          reloadMap[id] = minutes;
-        }
-        world.setDynamicProperty(RELOAD_INTERVALS_KEY, JSON.stringify(reloadMap));
-        const reset_right = res.formValues[2];
+
+        const reset_right = applyAll;
         if (reset_right === true) {
         resetAllTimerMap();
         }
         player.sendMessage(`✅ 周期を設定しました(分): ${minutes}`);
         
         // 確率＆個数設定
-        const ramdontoggle = res.formValues[3];
+        const ramdontoggle = probToggle;
         const probMap = JSON.parse(world.getDynamicProperty(CHEST_PROB_MAP_KEY) ?? "{}");
         
         if (ramdontoggle) {
-          const manualOnly = res.formValues[4];
+          const manualOnly = checkmode;
           const cnt = parseInt(cntText);
           const chance = parseFloat(chanceText);
           if (isNaN(cnt) || cnt < 1 || isNaN(chance) || chance < 1 || chance > 100) {
@@ -87,19 +80,21 @@ export function showCycleSettingGPUI(player) {
           members: chestList,
           count: cnt,
           chance: chance,
+          interval: minutes,
           mode: manualOnly
         };
-          player.sendMessage(`✅ 確率・個数を設定しました: 個数${cnt}, 確率${chance}%`);
+          player.sendMessage(`✅ 確率・個数を設定しました: 個数${cnt}, 確率${chance}%, 生成周期${minutes}分`);
         } else {
-          const manualOnly = res.formValues[4];
+          const manualOnly = checkmode;
           // ✅ デフォルト設定を保存（確率100%、上限 = メンバー数）
           probMap[groupName] = {
             members: chestList,
             count: chestList,
             chance: 100,
+            interval: minutes,
             mode: manualOnly
           };
-          player.sendMessage(`✅ デフォルト設定で登録しました: 全${chestList.length}個, 100%`);
+          player.sendMessage(`✅ デフォルト設定で登録しました: 全${chestList.length}個, 生成周期${minutes}分`);
         }
         
         world.setDynamicProperty(CHEST_PROB_MAP_KEY, JSON.stringify(probMap));

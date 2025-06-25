@@ -40,7 +40,7 @@ export function startRootChestAutoReload() {
 
     // 🧩 グループ単位の再生成
     for (const [groupName, cfg] of Object.entries(probMap)) {
-      const { members, count, chance, mode } = cfg;
+      const { members, count, chance, mode, interval } = cfg;
         if (mode === true) {
           groupTimerMap[groupName] = 0;
           continue;
@@ -51,8 +51,7 @@ export function startRootChestAutoReload() {
       groupTimerMap[groupName] = (groupTimerMap[groupName] ?? 0) + 1;
 
       // 代表chestIDから周期取得
-      const refID = members.find(cid => intervalMap[cid] !== undefined);
-      const intervalSec = 60 * (intervalMap[refID] ?? 10);
+      const intervalSec = 60 * (interval ?? 10);
       if (groupTimerMap[groupName] < intervalSec) continue;
 
       groupTimerMap[groupName] = 0;
